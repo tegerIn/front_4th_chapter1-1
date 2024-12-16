@@ -1,18 +1,30 @@
+const Header = () =>
+  `<header class="bg-blue-600 text-white p-4 sticky top-0">
+        <h1 class="text-2xl font-bold">항해플러스</h1>
+        </header>
+
+        <nav class="bg-white shadow-md p-2 sticky top-14">
+          <ul class="flex justify-around">
+            ${
+              localStorage.getItem("isLoggedIn") === "true"
+                ? `<li id="home"><a href="/" class="text-blue-600">홈</a></li>
+                <li id="profile"><a href="/profile" class="text-gray-600">프로필</a></li>
+                <li id="logout"><a href="#" class="text-gray-600">로그아웃</a></li>`
+                : `<li id="home"><a href="/" class="text-blue-600">홈</a></li>
+                <li id="profile"><a href="/login" class="text-gray-600">로그인</a></li>`
+            }
+          </ul>
+        </nav>`;
+
+const Footer = () => `
+  <footer class="bg-gray-200 p-4 text-center">
+    <p>&copy; 2024 항해플러스. All rights reserved.</p>
+  </footer>`;
+
 const MainPage = () => `
   <div class="bg-gray-100 min-h-screen flex justify-center">
     <div class="max-w-md w-full">
-      <header class="bg-blue-600 text-white p-4 sticky top-0">
-        <h1 class="text-2xl font-bold">항해플러스</h1>
-      </header>
-
-      <nav class="bg-white shadow-md p-2 sticky top-14">
-        <ul class="flex justify-around">
-          <li><a href="/" class="text-blue-600">홈</a></li>
-          <li><a href="/profile" class="text-gray-600">프로필</a></li>
-          <li><a href="#" class="text-gray-600">로그아웃</a></li>
-        </ul>
-      </nav>
-
+      ${Header()}
       <main class="p-4">
         <div class="mb-4 bg-white rounded-lg shadow p-4">
           <textarea class="w-full p-2 border rounded" placeholder="무슨 생각을 하고 계신가요?"></textarea>
@@ -102,10 +114,7 @@ const MainPage = () => `
           </div>
         </div>
       </main>
-
-      <footer class="bg-gray-200 p-4 text-center">
-        <p>&copy; 2024 항해플러스. All rights reserved.</p>
-      </footer>
+    ${Footer()}
     </div>
   </div>
 `;
@@ -130,7 +139,7 @@ const LoginPage = () => `
   <main class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
       <h1 class="text-2xl font-bold text-center text-blue-600 mb-8">항해플러스</h1>
-      <form>
+      <form id="login-form">
         <div class="mb-4">
           <input type="text" placeholder="이메일 또는 전화번호" class="w-full p-2 border rounded">
         </div>
@@ -151,27 +160,16 @@ const LoginPage = () => `
 `;
 
 const ProfilePage = () => `
-  <div id="root">
-    <div class="bg-gray-100 min-h-screen flex justify-center">
+  <div class="bg-gray-100 min-h-screen flex justify-center">
       <div class="max-w-md w-full">
-        <header class="bg-blue-600 text-white p-4 sticky top-0">
-          <h1 class="text-2xl font-bold">항해플러스</h1>
-        </header>
-
-        <nav class="bg-white shadow-md p-2 sticky top-14">
-          <ul class="flex justify-around">
-            <li><a href="/" class="text-gray-600">홈</a></li>
-            <li><a href="/profile" class="text-blue-600">프로필</a></li>
-            <li><a href="#" class="text-gray-600">로그아웃</a></li>
-          </ul>
-        </nav>
+        ${Header()}
 
         <main class="p-4">
           <div class="bg-white p-8 rounded-lg shadow-md">
             <h2 class="text-2xl font-bold text-center text-blue-600 mb-8">
               내 프로필
             </h2>
-            <form>
+            <form id="profile-form">
               <div class="mb-4">
                 <label
                   for="username"
@@ -182,7 +180,7 @@ const ProfilePage = () => `
                   type="text"
                   id="username"
                   name="username"
-                  value="홍길동"
+                  value=${JSON.parse(localStorage.getItem("user")).username}
                   class="w-full p-2 border rounded"
                 />
               </div>
@@ -196,7 +194,7 @@ const ProfilePage = () => `
                   type="email"
                   id="email"
                   name="email"
-                  value="hong@example.com"
+                  value=${JSON.parse(localStorage.getItem("user")).email | ""}
                   class="w-full p-2 border rounded"
                 />
               </div>
@@ -211,8 +209,7 @@ const ProfilePage = () => `
                   name="bio"
                   rows="4"
                   class="w-full p-2 border rounded"
-                >
-안녕하세요, 항해플러스에서 열심히 공부하고 있는 홍길동입니다.</textarea
+                >${JSON.parse(localStorage.getItem("user")).bio}</textarea
                 >
               </div>
               <button
@@ -225,17 +222,90 @@ const ProfilePage = () => `
           </div>
         </main>
 
-        <footer class="bg-gray-200 p-4 text-center">
-          <p>&copy; 2024 항해플러스. All rights reserved.</p>
-        </footer>
+        ${Footer()}
       </div>
     </div>
-  </div>
 `;
 
+// document.body.innerHTML = `
+//   ${MainPage()}
+//   ${ProfilePage()}
+//   ${LoginPage()}
+//   ${ErrorPage()}
+// `;
 document.body.innerHTML = `
-  ${MainPage()}
-  ${ProfilePage()}
-  ${LoginPage()}
-  ${ErrorPage()}
+  <div id="root"></div>
 `;
+
+import routerFunc from "./router";
+
+const router = routerFunc();
+router
+  .addRouter("/", MainPage)
+  .addRouter("/login", LoginPage)
+  .addRouter("/profile", ProfilePage)
+  .addRouter("/error", ErrorPage);
+
+router.handleRoute(window.location.pathname);
+
+document.addEventListener("DOMContentLoaded", () => {
+  router.handleRoute(window.location.pathname);
+
+  document.querySelector("nav").addEventListener("click", (e) => {
+    if (e.target.tagName.toLowerCase() === "a") {
+      e.preventDefault();
+      console.log(e);
+      const path = e.target.getAttribute("href");
+      router.navigatorTo(path);
+    }
+  });
+});
+document.body.addEventListener("submit", (e) => {
+  if (e.target.closest("#login-form")) {
+    e.preventDefault();
+    const username = document.querySelector(
+      "#login-form input[type='text']",
+    ).value;
+    const password = document.querySelector(
+      "#login-form input[type='password']",
+    ).value;
+
+    if (username && password) {
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ username, email: "", bio: "" }),
+      );
+      router.navigatorTo("/");
+    } else {
+      alert("이메일과 비밀번호를 입력하세요.");
+    }
+  }
+});
+
+document.body.addEventListener("submit", (e) => {
+  if (e.target.closest("#profile-form")) {
+    e.preventDefault();
+    const username = document.querySelector("#username").value;
+    const email = document.querySelector("#email").value;
+    const bio = document.querySelector("#bio").value;
+
+    localStorage.setItem("user", JSON.stringify({ username, email, bio }));
+    router.navigatorTo("/");
+  }
+});
+
+const nav = document.querySelector("nav");
+if (nav) {
+  console.log("chk1");
+  nav.addEventListener("click", (e) => {
+    if (e.target.getAttribute("href") === "#") {
+      console.log("chk2");
+      localStorage.removeItem("user");
+      localStorage.setItem("isLoggedIn", false);
+      router.navigatorTo("/login");
+    }
+  });
+}
+
+router.navigatorPop();
